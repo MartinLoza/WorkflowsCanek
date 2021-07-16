@@ -1,0 +1,157 @@
+---
+title: "Figure 2 plots"
+author: "Martin Loza"
+---
+
+This is the main workflow to reproduce the Jurkat/293t cells correction plots in Figure 2.
+
+```{r setup}
+library(here)
+library(patchwork)
+library(Seurat)
+library(ggplot2)
+options(future.globals.maxSize = 4e10)
+
+dimPCA <- 10
+
+resultsFile <- here("Data/Results/Figure2")
+mytheme <- theme_classic() + theme(text = element_text(size = 20)) 
+theme_set(mytheme)
+```
+
+# Load data
+
+```{r}
+datal <- readRDS(file = paste0(resultsFile, "/datal.Rds"))
+scores <- readRDS(file = paste0(resultsFile, "/scores.RDS"))
+scoresKbet <- scores$scoresKbet
+scoresSilhouette <- scores$scoresSilhouette
+```
+
+```{r}
+Uncorrected <- datal[["Uncorrected"]]
+Canek <- datal[["Canek"]]
+Seurat <- datal[["Seurat"]]
+MNN <- datal[["MNN"]]
+scMerge <- datal[["scMerge"]]
+ComBat <- datal[["ComBat"]]
+```
+
+
+# Figure 2
+
+```{r fig.height=25, fig.width=20}
+# We want to plot CD3D and XIST gene expressions. Because they were not selected as variable features, we will directly add them to a new assay.
+
+RNA <- Seurat::Assays(Seurat, slot = "RNA")
+Uncorrected[["RNA2"]] <- RNA
+Canek[["RNA"]] <- RNA
+MNN[["RNA"]] <- RNA
+scMerge[["RNA"]] <- RNA
+ComBat[["RNA"]] <- RNA
+
+maxColor = "purple"
+maxExp = max(GetAssayData(Uncorrected, assay = "RNA2", slot = "data")[c("CD3D","XIST"),])
+
+plot2 <- function(p, name = "p"){
+  x <- (p[[1]] +
+          scale_color_gradient(low = "gray", high = maxColor, limits = (c(0,maxExp))) +
+          ggtitle(paste0(name," - XIST")) + mytheme) +
+       (p[[2]] +
+          scale_color_gradient(low = "gray", high = maxColor, limits = (c(0,maxExp))) + 
+          ggtitle(paste0(name," - CD3D")) + mytheme) + plot_layout(nrow = 1, guides = "collect") 
+  
+  return(x)
+}
+
+p1 <- DimPlot(Uncorrected, reduction = "pca", group.by = "batch") + ggtitle("Uncorrected") + mytheme
+p2 <- DimPlot(Uncorrected, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
+
+p <- FeaturePlot(Uncorrected,
+                 features = c("XIST","CD3D"),
+                 order = TRUE,
+                 combine = FALSE, 
+                 reduction = "pca")
+
+pa1 <- p1 + p2 + ggtitle("Uncorrected") + plot_layout(guides = "collect", nrow = 1) 
+pa2 <- plot2(p,name = "Uncorrected") + mytheme
+
+p1 <- DimPlot(MNN, reduction = "pca", group.by = "batch") + ggtitle("MNN") + mytheme
+p2 <- DimPlot(MNN, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
+ 
+p <- FeaturePlot(MNN,
+                 features = c("XIST","CD3D"),
+                 order = TRUE,
+                 combine = FALSE, 
+                 reduction = "pca")
+
+pb1 <- p1 + p2 + ggtitle("MNN") + plot_layout(guides = "collect", nrow = 1) 
+pb2 <- plot2(p,name = "MNN") 
+
+p1 <- DimPlot(Seurat, reduction = "pca", group.by = "batch") + ggtitle("Seurat") + mytheme
+p2 <- DimPlot(Seurat, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
+
+p <- FeaturePlot(Seurat,
+                 features = c("XIST","CD3D"),
+                 order = TRUE,
+                 combine = FALSE,
+                 reduction = "pca")
+
+pc1 <- p1 + p2 + ggtitle("Seurat") + plot_layout(guides = "collect", nrow = 1) 
+pc2 <- plot2(p,name = "Seurat") 
+
+p1 <- DimPlot(scMerge, reduction = "pca", group.by = "batch") + ggtitle("scMerge") + mytheme
+p2 <- DimPlot(scMerge, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
+
+p <- FeaturePlot(scMerge,
+                 features = c("XIST","CD3D"),
+                 order = TRUE,
+                 combine = FALSE,
+                 reduction = "pca")
+
+pd1 <- p1 + p2 + ggtitle("scMerge") + plot_layout(guides = "collect", nrow = 1) 
+pd2 <- plot2(p,name = "scMerge")  
+
+p1 <- DimPlot(ComBat, reduction = "pca", group.by = "batch") + ggtitle("ComBat") + mytheme
+p2 <- DimPlot(ComBat, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
+
+p <- FeaturePlot(ComBat,
+                 features = c("XIST","CD3D"),
+                 order = TRUE, 
+                 combine = FALSE,
+                 reduction = "pca")
+
+pe1 <- p1 + p2 + ggtitle("ComBat") + plot_layout(guides = "collect", nrow = 1) 
+pe2 <- plot2(p,name = "ComBat")  
+
+p1 <- DimPlot(Canek, reduction = "pca", group.by = "batch") + ggtitle("Canek") + mytheme
+p2 <- DimPlot(Canek, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
+
+p <- FeaturePlot(Canek,
+                 features = c("XIST","CD3D"),
+                 order = TRUE, 
+                 combine = FALSE,
+                 reduction = "pca")
+
+pf1 <- p1 + p2 + ggtitle("Canek") + plot_layout(guides = "collect", nrow = 1) 
+pf2 <- plot2(p,name = "Canek")  
+
+layout <- "
+ab
+cd
+ef
+gh
+ij
+kl
+"
+
+p <- wrap_plots(a = pa1, b = pa2,
+                c = pb1, d = pb2,
+                e = pc1, f = pc2, 
+                g = pd1, h = pd2,
+                i = pe1, j = pe2,
+                k = pf1, l = pf2,
+                design = layout) 
+p
+```
+
