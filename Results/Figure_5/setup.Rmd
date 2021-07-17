@@ -53,7 +53,7 @@ table(xl[["fluidigmc1"]]$condition)
 ## T2D condition from smartSeq
 
 ```{r}
-data <- readRDS(paste0(file,"/SmartSeq/data.Rds"))
+data <- readRDS(paste0(dataFile,"/SmartSeq/data.Rds"))
 data <- data[["type II diabetes mellitus"]][[]]
 ```
 
