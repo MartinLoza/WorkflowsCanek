@@ -10,9 +10,8 @@ library(here)
 library(patchwork)
 library(Seurat)
 library(ggplot2)
+library(ggrepel)
 options(future.globals.maxSize = 4e10)
-
-dimPCA <- 10
 
 resultsFile <- here("Data/Results/Figure2")
 mytheme <- theme_classic() + theme(text = element_text(size = 20)) 
@@ -37,11 +36,10 @@ scMerge <- datal[["scMerge"]]
 ComBat <- datal[["ComBat"]]
 ```
 
-
-# Figure 2
+# Figure 2 v1
 
 ```{r fig.height=25, fig.width=20}
-# We want to plot CD3D and XIST gene expressions. Because they were not selected as variable features, we will directly add them to a new assay.
+# We want to plot CD3D and XIST gene expressions. Because they were not selected as variable features, we will add them to a new assay.
 
 RNA <- Seurat::Assays(Seurat, slot = "RNA")
 Uncorrected[["RNA2"]] <- RNA
@@ -152,6 +150,24 @@ p <- wrap_plots(a = pa1, b = pa2,
                 i = pe1, j = pe2,
                 k = pf1, l = pf2,
                 design = layout) 
+p
+```
+
+## Metrics 
+
+```{r}
+df <- data.frame("Silhouette" = t(scoresSilhouette), "kBET" = t(scoresKbet), Method = colnames(scoresKbet))
+```
+
+
+```{r}
+nudge_y <- max(scoresKbet)/3
+nudge_x <- max(scoresSilhouette)/10
+p <- ggplot(df, aes(Silhouette, kBET, color = Method, label = Method)) + 
+  geom_point(size = 7, alpha = 0.5) +
+  geom_text_repel(size = 7, alpha = 1.0, direction = "both", nudge_y = nudge_y, nudge_x = nudge_x) + 
+  NoLegend() + ylab("kBET(acceptance rate)")
+
 p
 ```
 
