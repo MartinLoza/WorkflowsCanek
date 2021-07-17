@@ -22,15 +22,15 @@ if (! "panc8" %in% SeuratData::InstalledData()[["Dataset"]]) {
 x <- SeuratData::LoadData("panc8")
 x <- UpdateSeuratObject(x)
 
-# Init condition
-x$condition <- "healthy"
+x$batch <- x$tech # Batch labels
+x$condition <- "healthy" # Init condition
 xl <- SplitObject(x, split.by = "tech")
 ```
 
 ## T2D condition from Fluidgm
 
 ```{r}
-data <- readRDS(paste0(file,"/Fluidgm/pdata.Rds"))
+data <- readRDS(paste0(dataFile,"/Fluidgm/pdata.Rds"))
 rownames(data) <- data$title
 ```
 
@@ -71,6 +71,6 @@ table(xl[["smartseq2"]]$condition)
 ## Save data
 
 ```{r}
-saveRDS(object = xl, file = paste0(file,"/Raw.Rds"))
+saveRDS(object = xl, file = paste0(dataFile,"/Raw.Rds"))
 ```
 
