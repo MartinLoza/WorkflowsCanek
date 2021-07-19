@@ -30,15 +30,23 @@ resultsFile <- here("Data/Results/Figure3") # Where the analysis results are sto
 ## Load data
 
 ```{r}
-x <- readRDS(dataFile)
+xl <- readRDS(dataFile)
+xl
+```
+
+## Droplet dataset
+
+```{r}
+x <- xl[["Droplets"]]
 x
 ```
+
 
 ## Sampling data. For tests
 
 ```{r}
 set.seed(seed)
-x <- RNAseqAnalysis::SampleData(object = x, frac = 0.05, seed = seed)
+x <- RNAseqAnalysis::SampleData(x, frac = 0.1, seed = seed)
 x
 ```
 
@@ -46,7 +54,7 @@ x
 
 ```{r}
 set.seed(seed)
-x <- RNAseqAnalysis::SeuratPreprocessing(object = x)
+x <- RNAseqAnalysis::SeuratPreprocessing(x)
 ```
 
 ## Clustering
