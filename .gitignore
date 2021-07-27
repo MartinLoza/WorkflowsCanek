@@ -43,3 +43,9 @@ Data
 
 # Test folder
 Tests
+
+# Error files from cluster
+error*
+
+# Output files from cluster
+output*
