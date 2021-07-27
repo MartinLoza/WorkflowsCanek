@@ -1,0 +1,248 @@
+---
+title: "Figure 3 plots"
+author: "Martin Loza"
+---
+
+This is the main workflow to reproduce the Pseudo-batches correction plots in Figure 3.
+
+```{r setup}
+library(here)
+library(patchwork)
+library(Seurat)
+library(ggplot2)
+library(ggrepel)
+options(future.globals.maxSize = 4e10)
+
+resultsFile <- here("Data/Results/Figure3")
+mytheme <- theme_classic() + theme(text = element_text(size = 20)) 
+theme_set(mytheme)
+```
+
+## Load data
+
+```{r}
+datal <- readRDS(file = paste0(resultsFile, "/1_datal.Rds"))
+scores <- readRDS(file = paste0(resultsFile, "/1_scores.RDS"))
+scoresKbet <- scores$scoresKbet
+scoresSilhouette <- scores$scoresSilhouette
+```
+
+```{r}
+Uncorrected <- datal[["Uncorrected"]]
+Canek <- datal[["Canek"]]
+Seurat <- datal[["Seurat"]]
+MNN <- datal[["MNN"]]
+scMerge <- datal[["scMerge"]]
+ComBat <- datal[["ComBat"]]
+Liger <- datal[["Liger"]]
+Harmony <- datal[["Harmony"]]
+Scanorama <- datal[["Scanorama"]]
+```
+
+## Figure 3. BioRxiv v1 Figure.
+
+```{r, fig.height=25, fig.width=20}
+plotDF <- function(dataset = NULL){
+  
+  batch <- factor(dataset$batch)
+  invOrder <- which(batch == levels(batch)[2])
+  invOrder <- c(invOrder, which(batch == levels(batch)[1]))
+
+  df <- as.data.frame(Embeddings(dataset,reduction = "umap"))
+  df$Cluster <- factor(dataset$seurat_clusters)
+  df$Batch <- batch
+  df$Inverse <- invOrder
+  
+  return(df)
+}
+
+# Uncorrected
+pa <- DimPlot(Uncorrected,
+              reduction = "umap",
+              group.by = "seurat_clusters", 
+              label = TRUE, label.size = 6) +
+  mytheme + NoLegend() + 
+  ggtitle("Uncorrected", subtitle = "Clusters") 
+
+data <- plotDF(Uncorrected)
+
+pb <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("gray", " purple")) + 
+  NoLegend() + 
+  ggtitle("",subtitle = "Pseudo-batch 1")
+
+pc <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("purple", " gray")) +
+  NoLegend()+ 
+  ggtitle("",subtitle = "Pseudo-batch 2")
+
+figC <- data.frame("Silhouette" = t(scoresSilhouette), "kBet.Acceptance.Rate" = t(scoresKbet), method = colnames(scoresKbet))
+
+pd <- ggplot(figC[-1,], aes(Silhouette, kBet.Acceptance.Rate, color = method, label = method)) + 
+  geom_point(size = 7, alpha = 0.5) +
+  geom_text_repel(size = 7, alpha = 1.0, direction = "both", nudge_y = 0 ) +
+  geom_hline(yintercept = figC$kBet.Acceptance.Rate[1], linetype = "dashed", alpha = 0.5 ) + 
+  geom_vline(xintercept = figC$Silhouette[1], linetype = "dashed", alpha = 0.5) + 
+  NoLegend()
+
+# Canek
+
+data <- plotDF(Canek)
+
+p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("gray", " purple")) +
+  ggtitle("Canek", subtitle = "Pseudo-batch 1") +
+  NoLegend()
+
+p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("purple", " gray")) +
+  ggtitle("",subtitle = "Pseudo-batch 2") + 
+  NoLegend()
+
+pe <- p1 + p2
+
+# MNN
+
+data <- plotDF(MNN)
+
+p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("gray", " purple")) +
+  ggtitle("MNN", subtitle = "Pseudo-batch 1") +
+  NoLegend()
+
+p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("purple", " gray")) +
+  ggtitle("",subtitle = "Pseudo-batch 2") + 
+  NoLegend()
+
+pf <- p1 + p2
+
+# Seurat
+
+data <- plotDF(Seurat)
+
+p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("gray", " purple")) +
+  ggtitle("Seurat", subtitle = "Pseudo-batch 1") +
+  NoLegend()
+
+p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("purple", " gray")) +
+  ggtitle("",subtitle = "Pseudo-batch 2") + 
+  NoLegend()
+
+pg <- p1 + p2
+
+# scMerge
+
+data <- plotDF(scMerge)
+
+p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("gray", " purple")) +
+  ggtitle("scMerge", subtitle = "Pseudo-batch 1") +
+  NoLegend()
+
+p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("purple", " gray")) +
+  ggtitle("",subtitle = "Pseudo-batch 2") + 
+  NoLegend()
+
+ph <- p1 + p2
+
+# ComBat
+
+data <- plotDF(ComBat)
+
+p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("gray", " purple")) +
+  ggtitle("ComBat", subtitle = "Pseudo-batch 1") +
+  NoLegend()
+
+p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("purple", " gray")) +
+  ggtitle("",subtitle = "Pseudo-batch 2") + 
+  NoLegend()
+
+pi <- p1 + p2
+
+# Liger
+
+data <- plotDF(Liger)
+
+p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("gray", " purple")) +
+  ggtitle("Liger", subtitle = "Pseudo-batch 1") +
+  NoLegend()
+
+p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("purple", " gray")) +
+  ggtitle("",subtitle = "Pseudo-batch 2") + 
+  NoLegend()
+
+pj <- p1 + p2
+
+# Harmony
+
+data <- plotDF(Harmony)
+
+p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("gray", " purple")) +
+  ggtitle("Harmony", subtitle = "Pseudo-batch 1") +
+  NoLegend()
+
+p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("purple", " gray")) +
+  ggtitle("",subtitle = "Pseudo-batch 2") + 
+  NoLegend()
+
+pk <- p1 + p2
+
+# Scanorama
+
+data <- plotDF(Scanorama)
+
+p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("gray", " purple")) +
+  ggtitle("Scanorama", subtitle = "Pseudo-batch 1") +
+  NoLegend()
+
+p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
+  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
+  scale_color_manual(values = c("purple", " gray")) +
+  ggtitle("",subtitle = "Pseudo-batch 2") + 
+  NoLegend()
+
+pl <- p1 + p2
+
+layout <- "
+abcd
+eeff
+gghh
+iijj
+kkll
+"
+p <- wrap_plots(a = pa, b = pb, c = pc, d = pd,
+                e = pe, f = pf, 
+                g = pg, h = ph,
+                i = pi, j = pj,
+                k = pk, l = pl, 
+                design = layout)
+p
+```
