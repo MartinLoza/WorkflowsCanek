@@ -1,5 +1,5 @@
 ---
-title: "Assign healthy and T2D condition to pancreatics"
+title: "Assign healthy and T2D condition to pancreas datasets."
 author: "Martin Loza"
 ---
 
@@ -9,8 +9,7 @@ library(Seurat)
 library(SeuratData)
 options(future.globals.maxSize = 4e10)
 
-seed = 777 
-dataFile <- here("Data/Results/Pancreas") 
+dataFile <- here("Data/Results/Pancreas") # Input and output data folder.
 ```
 
 # Pancreatics datasets
@@ -22,9 +21,9 @@ if (! "panc8" %in% SeuratData::InstalledData()[["Dataset"]]) {
 x <- SeuratData::LoadData("panc8")
 x <- UpdateSeuratObject(x)
 
-x$batch <- x$tech # Batch labels
+x$batch <- x$dataset # Batch labels
 x$condition <- "healthy" # Init condition
-xl <- SplitObject(x, split.by = "tech")
+xl <- SplitObject(x, split.by = "batch")
 ```
 
 ## T2D condition from Fluidgm
@@ -54,7 +53,7 @@ table(xl[["fluidigmc1"]]$condition)
 
 ```{r}
 data <- readRDS(paste0(dataFile,"/SmartSeq/data.Rds"))
-data <- data[["type II diabetes mellitus"]][[]]
+data <- data[["type II diabetes mellitus"]][[]] 
 ```
 
 ```{r}
