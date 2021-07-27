@@ -1,30 +1,27 @@
-#####################################
-#title: "Figure 2. Jurkat/293t/50_50"
-#author: "Martin Loza"
-#####################################
+# ---
+# title: "Figure 2. Jurkat/293t/50_50"
+# author: "Martin Loza"
+# ---
 
-#This is the main workflow to reproduce the Jurkat/293t cells correction shown in Figure 2.
+# This is the main workflow to reproduce the Jurkat/293t cells correction shown in Figure 2.
 
-## Init
+## Setup
 library(here)
-library(patchwork)
 library(Canek)
 library(Seurat)
-library(ggplot2)
 library(RNAseqAnalysis)
 options(future.globals.maxSize = 4e10)
 
-seed = 777
-dimPCA <- 10
-ks <- c(1,1,2)
-per <- c(0.05, 0.15, 0.3)
+dimPCA <- 10 # Number of PCA dimensions used in the analysis.
+per <- c(0.05, 0.15, 0.3) # Percentages of mean size used in kBET.
+seed <- 777 # Luck seed.
+batchKBET <- "batch" # Label used in kBET.
+batchSilhouette <- "celltype" # Label used in Silhouette.
 
-dataFile <- here("Data/Results/Jurkat_293t/Raw.Rds")
-resultsFile <- here("Data/Results/Figure2")
-mytheme <- theme_classic() + theme(text = element_text(size = 20)) 
-theme_set(mytheme)
+dataFile <- here("Data/Results/Jurkat_293t/Raw.Rds") # Input data file's path.
+resultsFile <- here("Data/Results/Figure2") # Output data file's path.
 
-# Load data
+## Load data
 xl <- readRDS(dataFile)
 xl
 
@@ -33,14 +30,16 @@ set.seed(seed)
 xl <- lapply(xl, RNAseqAnalysis::SampleData, frac = 0.1, seed = seed)
 xl
 
-# Data preprocessing
+## Data preprocessing
 set.seed(seed)
 xl <- lapply(xl, RNAseqAnalysis::SeuratPreprocessing)
 
 ## Corrections
+ks <- c(1,1,2) # Ks for scMerge
+set.seed(seed)
 source(here("Results/CorrectData.R"), knitr::knit_global())
 
-#We create a list with the correction results to ease downstream analyses.
+# We create a list with the correction results to ease downstream analyses.
 datal <- list(Uncorrected = Uncorrected,
               Canek = Canek,
               MNN = MNN,
@@ -56,51 +55,8 @@ datal <- list(Uncorrected = Uncorrected,
 saveRDS(object = datal, file = paste0(resultsFile, "/datal.Rds"))
 
 ## Metrics
-
-# Set up the data frames for metrics results. 
-scoresKbet <- data.frame(matrix(integer(), nrow = 1, ncol = length(datal)))
-colnames(scoresKbet) <- names(datal)
-
-scoresSilhouette <- data.frame(matrix(integer(), nrow = 1, ncol = length(datal)))
-colnames(scoresSilhouette) <- names(datal)
-
-### kBET
-batch = "batch"
-
-for(method in names(datal)){
-  if(method == "Liger"){
-    reduction <- "Liger"
-    dims = ncol(datal$Liger[[reduction]])
-  }else if(method == "Harmony"){
-    reduction <- "harmony"
-    dims = ncol(datal$Harmony[[reduction]])
-  }else{
-    reduction <- "pca"
-    dims <- dimPCA
-  }
-  
-  set.seed(seed)
-  scoresKbet[method] <- RNAseqAnalysis::RunKBET(object = datal[[method]], batch = batch, reduction = reduction, dims = dims, per = per, acceptance = TRUE)
-}
-
-### Silhouette
-batch = "celltype"
-
-for(method in names(datal)){
-  if(method == "Liger"){
-    reduction <- "Liger"
-    dims = ncol(datal$Liger[[reduction]])
-  }else if(method == "Harmony"){
-    reduction <- "harmony"
-    dims = ncol(datal$Harmony[[reduction]])
-  }else{
-    reduction <- "pca"
-    dims <- dimPCA
-  }
-  
-  set.seed(seed)
-  scoresSilhouette[method] <- RNAseqAnalysis::RunSilhouette(object = datal[[method]], batch = batch, reduction = reduction, dims = dims)
-}
+set.seed(seed)
+source(here("Results/Metrics.R"), knitr::knit_global())
 
 ## Save scores
 saveRDS(object = list(scoresKbet = scoresKbet, scoresSilhouette = scoresSilhouette), file = paste0(resultsFile, "/scores.RDS"))
