@@ -1,10 +1,11 @@
-##################################
-#title: "Figure 3. Pseudo-batches"
-#author: "Martin Loza"
-##################################
+# ---
+# title: "Figure 3. Pseudo-batches"
+# author: "Martin Loza"
+# ---
 
-#This is the main workflow to reproduce the pseudo-batches test from Figure 3.
+# This is the main workflow to reproduce the pseudo-batches test from Figure 3.
 
+## Setup
 library(here)
 library(Canek)
 library(Seurat)
@@ -13,42 +14,47 @@ options(future.globals.maxSize = 4e10)
 
 dimPCA <- 10 # Number of PCA dimensions used in the analysis.
 per <- c(0.05, 0.15, 0.3) # Percentages of mean size used in kBET.
+#per <- c(0.05) # For tests
 resolution = 0.5 # Resolution used in clustering.
 algorithm <- 1 # Algorithm used in clustering.
 frac = 0.5 # Fraction of cells used to create the pseudo-batches.
-seed <- 777 # Original seed.
-rep = 2 # Number of test repetitions.
-seeds <- seq(from = 1, to = rep, by = 1) # Seeds used in the repetitions.
+seed <- 777 # Lucky seed.
+rep = 1 # Number of test repetitions.
 batchKBET <- "batch" # Label used in kBET.
 batchSilhouette <- "seurat_clusters" # Label used in Silhouette.
 
-dataFile <- here("Data/Results/Spleen_TM/Raw.Rds") # Where the analized data is storage. 
-resultsFile <- here("Data/Results/Figure3") # Where the analysis results are storage.
+dataFile <- here("Data/Results/Spleen_TM/Raw.Rds") # Input data file's path.
+resultsFile <- here("Data/Results/Figure3") # Output data file's path.
 
 ## Load data
-x <- readRDS(dataFile)
+xl <- readRDS(dataFile)
+xl
+
+## Droplet dataset
+x <- xl[["Droplets"]]
 x
 
 ## Sampling data. For tests
 set.seed(seed)
-x <- RNAseqAnalysis::SampleData(object = x, frac = 0.05, seed = seed)
+x <- RNAseqAnalysis::SampleData(x, frac = 0.1, seed = seed)
 x
 
 ## Data preprocessing
 set.seed(seed)
-x <- RNAseqAnalysis::SeuratPreprocessing(object = x)
+x <- RNAseqAnalysis::SeuratPreprocessing(x)
 
 ## Clustering
 set.seed(seed)
-x <- FindNeighbors(x, dims = 1:dimPCA, reduction = "pca", verbose = FALSE)
-x <- FindClusters(x, resolution =resolution, algorithm = algorithm, verbose = FALSE)
+x <- Seurat::FindNeighbors(x, dims = 1:dimPCA, reduction = "pca", verbose = FALSE)
+set.seed(seed)
+x <- Seurat::FindClusters(x, resolution =resolution, algorithm = algorithm, verbose = FALSE)
 
 ## Corrections and metrics
 ks <- rep(length(unique(x$seurat_clusters)),2) # Number of celltypes used in scMerge.
 
 for(i in seq_len(rep)){
   
-  seed <- seeds[i] # Seed to use in the test.
+  seed <- i # Seed same as i.
   
   ## Create the pseudo-baches
   set.seed(seed)
@@ -85,3 +91,5 @@ for(i in seq_len(rep)){
   ## Save scores
   saveRDS(object = list(scoresKbet = scoresKbet, scoresSilhouette = scoresSilhouette), file =  paste0(resultsFile, "/", i, "_scores.RDS"))
 }
+
+
