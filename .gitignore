@@ -40,3 +40,6 @@ vignettes/*.pdf
 
 # Data file 
 Data
+
+# Test folder
+Tests
