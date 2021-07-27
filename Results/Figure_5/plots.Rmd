@@ -1,0 +1,127 @@
+---
+title: "Figure 5 plots"
+author: "Martin Loza"
+---
+
+This is the plot workflow to reproduce the Pancreatics cells correction shown in Figures 5 and 6.
+
+```{r setup}
+library(here)
+library(patchwork)
+library(Seurat)
+library(ggplot2)
+library(ggrepel)
+options(future.globals.maxSize = 4e10)
+
+resultsFile <- here("Data/Results/Figure5")
+mytheme <- theme_classic() + theme(text = element_text(size = 20)) 
+theme_set(mytheme)
+```
+
+# Load data
+
+```{r}
+datal <- readRDS(file = paste0(resultsFile, "/datal.Rds"))
+scores <- readRDS(file = paste0(resultsFile, "/scores.RDS"))
+scoresKbet <- scores$scoresKbet
+scoresSilhouette <- scores$scoresSilhouette
+```
+
+```{r}
+Uncorrected <- datal[["Uncorrected"]]
+Canek <- datal[["Canek"]]
+Seurat <- datal[["Seurat"]]
+MNN <- datal[["MNN"]]
+scMerge <- datal[["scMerge"]]
+ComBat <- datal[["ComBat"]]
+```
+
+# Pancreas Integrations. Test
+
+```{r fig.height=25, fig.width=20}
+
+# Uncorrected
+
+p1 <- DimPlot(Uncorrected, reduction = "pca", group.by = "batch") + ggtitle("Uncorrected") + mytheme
+p2 <- DimPlot(Uncorrected, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
+p3 <- DimPlot(Uncorrected, reduction = "pca", group.by = "celltype") + mytheme + theme(plot.title = element_blank())
+p4 <- DimPlot(Uncorrected, reduction = "umap", group.by = "celltype") + mytheme + theme(plot.title = element_blank())
+
+pb1 <- p1 + p2 + ggtitle("Uncorrected") + plot_layout(guides = "collect", nrow = 1) 
+pb2 <- p3 + p4 + ggtitle("Uncorrected") + plot_layout(guides = "collect", nrow = 1) 
+
+# Canek 
+
+p1 <- DimPlot(Canek, reduction = "pca", group.by = "batch") + ggtitle("Canek") + mytheme
+p2 <- DimPlot(Canek, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
+p3 <- DimPlot(Canek, reduction = "pca", group.by = "celltype") + mytheme + theme(plot.title = element_blank())
+p4 <- DimPlot(Canek, reduction = "umap", group.by = "celltype") + mytheme + theme(plot.title = element_blank())
+
+pc1 <- p1 + p2 + ggtitle("Canek") + plot_layout(guides = "collect", nrow = 1) 
+pc2 <- p3 + p4 + ggtitle("Canek") + plot_layout(guides = "collect", nrow = 1) 
+
+# MNN
+
+p1 <- DimPlot(MNN, reduction = "pca", group.by = "batch") + ggtitle("MNN") + mytheme
+p2 <- DimPlot(MNN, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
+p3 <- DimPlot(MNN, reduction = "pca", group.by = "celltype") + mytheme + theme(plot.title = element_blank())
+p4 <- DimPlot(MNN, reduction = "umap", group.by = "celltype") + mytheme + theme(plot.title = element_blank())
+
+pd1 <- p1 + p2 + ggtitle("MNN") + plot_layout(guides = "collect", nrow = 1) 
+pd2 <- p3 + p4 + ggtitle("MNN") + plot_layout(guides = "collect", nrow = 1)
+
+# Seurat
+
+p1 <- DimPlot(Seurat, reduction = "pca", group.by = "batch") + ggtitle("Seurat") + mytheme
+p2 <- DimPlot(Seurat, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
+p3 <- DimPlot(Seurat, reduction = "pca", group.by = "celltype") + mytheme + theme(plot.title = element_blank())
+p4 <- DimPlot(Seurat, reduction = "umap", group.by = "celltype") + mytheme + theme(plot.title = element_blank())
+
+pe1 <- p1 + p2 + ggtitle("Seurat") + plot_layout(guides = "collect", nrow = 1) 
+pe2 <- p3 + p4 + ggtitle("Seurat") + plot_layout(guides = "collect", nrow = 1) 
+ 
+# scMerge
+
+p1 <- DimPlot(scMerge, reduction = "pca", group.by = "batch") + ggtitle("scMerge") + mytheme
+p2 <- DimPlot(scMerge, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
+p3 <- DimPlot(scMerge, reduction = "pca", group.by = "celltype") + mytheme + theme(plot.title = element_blank()) 
+p4 <- DimPlot(scMerge, reduction = "umap", group.by = "celltype") + mytheme + theme(plot.title = element_blank())
+
+pf1 <- p1 + p2 + ggtitle("scMerge") + plot_layout(guides = "collect", nrow = 1) 
+pf2 <- p3 + p4 + ggtitle("scMerge") + plot_layout(guides = "collect", nrow = 1)
+
+layout <- "
+cd
+ef
+gh
+ij
+kl
+"
+
+p <- wrap_plots(c = pb1, d = pb2,
+                e = pc1, f = pc2, 
+                g = pd1, h = pd2,
+                i = pe1, j = pe2,
+                k = pf1, l = pf2,
+                design = layout)
+p
+```
+
+## Metrics 
+
+```{r}
+df <- data.frame("Silhouette" = t(scoresSilhouette), "kBET" = t(scoresKbet), Method = colnames(scoresKbet))
+```
+
+
+```{r}
+nudge_y <- 0
+nudge_x <- 0
+p <- ggplot(df, aes(Silhouette, kBET, color = Method, label = Method)) + 
+  geom_point(size = 7, alpha = 0.5) +
+  geom_text_repel(size = 7, alpha = 1.0, direction = "both", nudge_y = nudge_y, nudge_x = nudge_x) + 
+  NoLegend() + ylab("kBET(acceptance rate)")
+
+p
+```
+
