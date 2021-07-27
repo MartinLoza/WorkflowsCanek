@@ -1,6 +1,6 @@
 ---
 title: "Figure 4. Create simulated data"
-author: "Torito Martin Loza"
+author: "Martin Loza"
 ---
 
 In this workflow we simulate the data with and without batch-effects to use on Figure 4.
@@ -40,11 +40,14 @@ sim11 <- splatter::splatSimulate(params, method = method_C1_C2, group.prob = gro
 ## With batch-effects
 sim2 <- splatter::splatSimulate(params, method = method_C3_C4_C5, group.prob = group.prob_C3_C4_C5, de.prob = group.prob_C3_C4_C5, seed = seed, verbose = FALSE)
 
+
 ## Without batch-effects
 sim22 <- splatter::splatSimulate(params, method = method_C3_C4_C5, group.prob = c(0.4,0.3,0.3), de.prob = c(0.2,0.25,0.35), seed = seed, verbose = FALSE, batch.rmEffect = TRUE)
 ```
 
 ## Setup simulated data
+
+### With batch-effects
 
 ```{r}
 # Simulations with batch-effects
@@ -60,11 +63,9 @@ levels(metaData2$Group) <- c("Cell-3", "Cell-4", "Cell-5")
 metaData <- rbind(metaData1,metaData2)
 names(metaData) <- c("batch", "celltype")
 rownames(metaData) <- colnames(data)
-```
 
-## Batches with batch-effects
+#Simulate batch specific celltypes and create seurat objects.
 
-```{r}
 ## Batch 1 -> C1,C2,C3
 idx <- which((metaData$batch == "Batch1") & (metaData$celltype == "Cell-1" |
                                              metaData$celltype == "Cell-2" |
@@ -85,10 +86,9 @@ xl <- list(B1 = B1, B2 = B2, B3 = B3)
 xl
 ```
 
-## Batches without batch-effects
+### Without batch-effects
 
 ```{r}
-
 # Simulations without batch-effects - GOLD STANDARD
 data <- cbind(counts(sim11),counts(sim22))
 colnames(data) <- paste0("Cell", seq_len(ncol(data)))
@@ -123,4 +123,3 @@ GS
 saveRDS(object = xl, file = paste0(dataFile, "/Raw.Rds"))
 saveRDS(object = GS, file = paste0(dataFile, "/GS_Raw.Rds"))
 ```
-

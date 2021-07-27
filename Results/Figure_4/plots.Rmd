@@ -37,7 +37,7 @@ scMerge <- datal[["scMerge"]]
 ComBat <- datal[["ComBat"]]
 ```
 
-# Fig 4 
+# BioRxiv v1 Fig 4. 
 
 ```{r fig.height=30, fig.width=20}
 

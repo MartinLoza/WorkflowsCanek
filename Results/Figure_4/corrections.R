@@ -1,24 +1,26 @@
-###############################
-#title: "Figure 4. Simulations"
-#author: "Martin Loza"
-###############################
+# ---
+# title: "Figure 4. Simulations"
+# author: "Martin Loza"
+# ---
 
-#This is the main workflow to reproduce the simulated data correction shown in Figure 4.
+# This is the main workflow to reproduce the simulated data correction shown in Figure 4.
 
+## Setup
 library(here)
 library(Canek)
 library(Seurat)
 library(RNAseqAnalysis)
 options(future.globals.maxSize = 4e10)
 
-seed = 777 # Lucky seed. 
 dimPCA <- 10 # Number of PCA dimensions used in the analysis.
-per <- c(0.05, 0.15, 0.3) # Percentages of mean size used in kBET.
+#per <- c(0.05, 0.15, 0.3) # Percentages of mean size used in kBET.
+per <- c(0.05) # Percentages of mean size used in kBET for test
+seed <- 666 # Luck seed.
 batchKBET <- "batch" # Label used in kBET.
 batchSilhouette <- "celltype" # Label used in Silhouette.
 
-dataFile <- here("Data/Results/Simulations") # Where the analized data is storage. 
-resultsFile <- here("Data/Results/Figure4") # Where the analysis results are storage.
+dataFile <- here("Data/Results/Simulations") # Input data file's path.
+resultsFile <- here("Data/Results/Figure4") # Output data file's path.
 
 ## Load data
 xl <- readRDS(file = paste0(dataFile, "/Raw.Rds"))
@@ -28,7 +30,7 @@ GS
 
 ## Sampling data. For tests
 set.seed(seed)
-idxSample <- sample(x = ncol(GS), size = floor(0.3*ncol(GS)), replace = FALSE)
+idxSample <- sample(x = ncol(GS), size = floor(0.2*ncol(GS)), replace = FALSE)
 
 GS <- GS[,idxSample]
 
@@ -36,8 +38,8 @@ x <- Reduce(merge, xl)
 x <- x[,idxSample]
 xl <- Seurat::SplitObject(x, split.by = "batch")
 
-xl
 GS
+xl
 
 ## Data preprocessing
 set.seed(seed)
@@ -45,11 +47,11 @@ xl <- lapply(xl, RNAseqAnalysis::SeuratPreprocessing)
 set.seed(seed)
 GS <- RNAseqAnalysis::SeuratPreprocessing(GS)
 
-## Set up GS
-GS <- RNAseqAnalysis::GetUMAP(object = GS, dims = dimPCA, reduction = "pca", verbose = FALSE)
+## Gold standard PCA and UMAP
+GS <- RNAseqAnalysis::GetUMAP(GS, dims = dimPCA)
 
 ## Corrections
-ks <- rep(length(unique(GS$celltype)), length(unique(GS$batch))) # Number of celltypes used in scMerge.
+ks <- c(3,2,2) # Ks for scMerge
 set.seed(seed)
 source(here("Results/CorrectData.R"), knitr::knit_global())
 
@@ -75,3 +77,5 @@ source(here("Results/Metrics.R"), knitr::knit_global())
 
 ## Save scores
 saveRDS(object = list(scoresKbet = scoresKbet, scoresSilhouette = scoresSilhouette), file = paste0(resultsFile, "/scores.RDS"))
+        
+        
