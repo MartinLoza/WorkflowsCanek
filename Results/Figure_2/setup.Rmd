@@ -69,6 +69,7 @@ Mix50_50[["clusters"]] <- clusters
 ```{r}
 DimPlot(Mix50_50, group.by = "clusters") / FeaturePlot(Mix50_50, features = c("XIST", "CD3D"))
 ```
+
 We assign the celltype labels in accordance with celltype specific markers. CD3D's expression (Jurkat cells) correlates with cluster 1, and XIST's expression (293t cells) with cluster 2. 
 
 ```{r}
@@ -79,16 +80,8 @@ DimPlot(Mix50_50, group.by = "celltype") / FeaturePlot(Mix50_50, features = c("X
 
 ```{r}
 xl <- list(Jurkat = Jurkat, t293 = t293, Mix50_50 = Mix50_50)
-x <- Reduce(merge, xl)
 ```
 
-## Plot celltypes
-
-```{r fig.height=7, fig.width=5}
-x <- RNAseqAnalysis::SeuratPreprocessing(x)
-x <- Seurat::GetUMAP(x, dims = 10)
-DimPlot(x, group.by = "batch") / DimPlot(x, group.by = "celltype")
-```
 # Save Datasets
 
 ```{r}
