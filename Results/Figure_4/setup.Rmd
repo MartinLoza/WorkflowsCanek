@@ -12,7 +12,7 @@ library(here)
 library(splatter)
 options(future.globals.maxSize = 4e10)
 
-seed = 777 # Lucky seed.
+seed = 321 # Seed.
 nCells = 1200 # Initial number of cells per batch.
 nGenes = 2000 # Number of genes. 
 method_C1_C2 = "paths" # Simulations method.
@@ -38,11 +38,10 @@ sim11 <- splatter::splatSimulate(params, method = method_C1_C2, group.prob = gro
 
 # Simulate Celltyes 3,4, and 5
 ## With batch-effects
-sim2 <- splatter::splatSimulate(params, method = method_C3_C4_C5, group.prob = group.prob_C3_C4_C5, de.prob = group.prob_C3_C4_C5, seed = seed, verbose = FALSE)
-
+sim2 <- splatter::splatSimulate(params, method = method_C3_C4_C5, group.prob = group.prob_C3_C4_C5, de.prob = de.prob_C3_C4_C5, seed = seed, verbose = FALSE)
 
 ## Without batch-effects
-sim22 <- splatter::splatSimulate(params, method = method_C3_C4_C5, group.prob = c(0.4,0.3,0.3), de.prob = c(0.2,0.25,0.35), seed = seed, verbose = FALSE, batch.rmEffect = TRUE)
+sim22 <- splatter::splatSimulate(params, method = method_C3_C4_C5, group.prob = group.prob_C3_C4_C5, de.prob = de.prob_C3_C4_C5, seed = seed, verbose = FALSE, batch.rmEffect = TRUE)
 ```
 
 ## Setup simulated data
