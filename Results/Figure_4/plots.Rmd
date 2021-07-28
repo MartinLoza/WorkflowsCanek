@@ -19,12 +19,13 @@ theme_set(mytheme)
 
 ## Functions
 ## Plot for BioRxiv v1
-plotCorrection <- function(object = NULL, title = "correction"){
-  p1 <- DimPlot(object, reduction = "pca", group.by = "batch") + 
+plotCorrection <- function(object = NULL, title = "correction", reduction1 = "pca", reduction2 = "umap"){
+  
+  p1 <- DimPlot(object, reduction = reduction1, group.by = "batch") + 
     ggtitle(title) + mytheme
-  p2 <- DimPlot(object, reduction = "umap", group.by = "batch") + mytheme + theme(plot.title = element_blank())
-  p3 <- DimPlot(object, reduction = "pca", group.by = "celltype") + mytheme + theme(plot.title = element_blank())
-  p4 <- DimPlot(object, reduction = "umap", group.by = "celltype") + mytheme + theme(plot.title = element_blank())
+  p2 <- DimPlot(object, reduction = reduction2, group.by = "batch") + mytheme + theme(plot.title = element_blank())
+  p3 <- DimPlot(object, reduction = reduction1, group.by = "celltype") + mytheme + theme(plot.title = element_blank())
+  p4 <- DimPlot(object, reduction = reduction2, group.by = "celltype") + mytheme + theme(plot.title = element_blank())
   
   pa <- p1 + p2 + ggtitle(title) + plot_layout(guides = "collect", nrow = 1) 
   pb <- p3 + p4 + ggtitle(title) + plot_layout(guides = "collect", nrow = 1)
@@ -50,7 +51,16 @@ plots <- lapply(names(datal), function(n){
     title = "Gold Standard"
   else
     title = n
-  return(plotCorrection(object = datal[[n]], title = title))
+  
+  if(n == "Liger"){
+    reduction1 = "Liger"
+  }else if(n == "Harmony"){
+    reduction1 = "harmony"
+  }else{
+    reduction1 = "pca"
+  }
+  
+  return(plotCorrection(object = datal[[n]], title = title, reduction1 = reduction1))
 })
 names(plots) <- names(datal)
 
