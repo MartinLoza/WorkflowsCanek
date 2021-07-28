@@ -3,16 +3,15 @@ title: "Setup IfnB datasets."
 author: "Martin Loza"
 ---
 
-```{r setup, include=FALSE}
+```{r setup}
 library(here)
 library(Seurat)
 options(future.globals.maxSize = 4e10)
 
-seed = 777
 dataFile <- here("Data/Results/IfnB")
 ```
 
-# Load data and Create Seurat Object
+## Load data and Create Seurat Object
 
 ```{r}
 if (! "ifnb" %in% SeuratData::InstalledData()[["Dataset"]]) {
