@@ -3,7 +3,7 @@ title: "Setup Spleen datasets from Tabula Muris"
 author: "Martin Loza"
 ---
 
-```{r setup, include=FALSE}
+```{r setup}
 library(here)
 library(Seurat)
 options(future.globals.maxSize = 4e10)
