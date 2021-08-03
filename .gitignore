@@ -38,7 +38,7 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# Data file 
+# Data folder
 Data
 
 # Test folder
@@ -49,3 +49,6 @@ error*
 
 # Output files from cluster
 output*
+
+# Figures folder
+Figures 
