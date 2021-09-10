@@ -19,7 +19,7 @@ resolution = 0.5 # Resolution used in clustering.
 algorithm <- 1 # Algorithm used in clustering.
 frac = 0.5 # Fraction of cells used to create the pseudo-batches.
 seed <- 777 # Lucky seed.
-rep = 1 # Number of test repetitions.
+rep = 10 # Number of test repetitions.
 batchKBET <- "batch" # Label used in kBET.
 batchSilhouette <- "seurat_clusters" # Label used in Silhouette.
 
@@ -43,15 +43,6 @@ x
 set.seed(seed)
 x <- RNAseqAnalysis::SeuratPreprocessing(x)
 
-## Clustering
-set.seed(seed)
-x <- Seurat::FindNeighbors(x, dims = 1:dimPCA, reduction = "pca", verbose = FALSE)
-set.seed(seed)
-x <- Seurat::FindClusters(x, resolution =resolution, algorithm = algorithm, verbose = FALSE)
-
-## Corrections and metrics
-ks <- rep(length(unique(x$seurat_clusters)),2) # Number of celltypes used in scMerge.
-
 for(i in seq_len(rep)){
   
   seed <- i # Seed same as i.
@@ -67,7 +58,7 @@ for(i in seq_len(rep)){
   
   ## Corrections
   set.seed(seed)
-  source(here("Results/CorrectData.R"), knitr::knit_global())
+  source(here("Results/CorrectDataPseudobatches.R"), knitr::knit_global())
   
   # We create a list with the correction results to ease downstream analyses.
   datal <- list(Uncorrected = Uncorrected,
@@ -83,7 +74,7 @@ for(i in seq_len(rep)){
   
   ## Save corrections
   saveRDS(object = datal, file = paste0(resultsFile, "/", i, "_datal.Rds"))
-  
+   
   ## Metrics
   set.seed(seed)
   source(here("Results/Metrics.R"), knitr::knit_global())
