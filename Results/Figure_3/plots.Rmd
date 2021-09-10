@@ -11,14 +11,20 @@ library(patchwork)
 library(Seurat)
 library(ggplot2)
 library(ggrepel)
+library(dplyr)
+library(ggforce)
 options(future.globals.maxSize = 4e10)
+source(here("Functions.R"))
 
 resultsFile <- here("Data/Results/Figure3")
-mytheme <- theme_classic() + theme(text = element_text(size = 20)) 
+plotsFile <- here("Figures/Figure3")
+mytheme <- theme_classic() + theme(text = element_text(size = 20), legend.text=element_text(size=16))
 theme_set(mytheme)
 ```
 
-## Load data
+## Load data 
+
+### Integrations and main Figure data
 
 ```{r}
 datal <- readRDS(file = paste0(resultsFile, "/1_datal.Rds"))
@@ -27,222 +33,170 @@ scoresKbet <- scores$scoresKbet
 scoresSilhouette <- scores$scoresSilhouette
 ```
 
+#### Setup data
+
 ```{r}
-Uncorrected <- datal[["Uncorrected"]]
-Canek <- datal[["Canek"]]
-Seurat <- datal[["Seurat"]]
-MNN <- datal[["MNN"]]
-scMerge <- datal[["scMerge"]]
-ComBat <- datal[["ComBat"]]
-Liger <- datal[["Liger"]]
-Harmony <- datal[["Harmony"]]
-Scanorama <- datal[["Scanorama"]]
+# Set pseudo-batches labels 
+datal <- lapply(datal, setPseudoBatchesLabels)
 ```
 
-## Figure 3. BioRxiv v1 Figure.
+### Ovals data
 
-```{r, fig.height=25, fig.width=20}
-plotDF <- function(dataset = NULL){
+```{r}
+scores <- list.files(path = resultsFile, pattern = "*scores.RDS", full.names = TRUE)
+scores <- lapply(scores, readRDS)
+scores <- GetScores(scores = scores)
+centers <- GetCenters(scores = scores)
+```
+
+## Plots
+
+### Metrics
+
+```{r}
+methods <- names(datal)
+idxUncorrected <- which(methods == "Uncorrected")
+methods <- methods[-idxUncorrected]
+
+pMetrics <-  plotMetrics(scoresKbet = scoresKbet[,methods], scoresSilhouette = scoresSilhouette[,methods], methods = methods, nudge_y = -0.01)
+
+pMetrics <- pMetrics + geom_hline(yintercept = scoresKbet[,"Uncorrected"], linetype = "dashed", alpha = 0.5 ) +  geom_vline(xintercept = scoresSilhouette[,"Uncorrected"], linetype = "dashed", alpha = 0.5)
+#pMetrics
+```
+
+### Corrections plots
+
+#### Create corrections plots
+
+```{r}
+methods <- names(datal)
+plots <- lapply(methods, function(m){
+  reduction = "umap"
+  return(plotCorrection(object = datal[[m]], groups = c("seurat_clusters"), reduction = reduction, label = TRUE, label.size = 6))
+})
+names(plots) <- methods
+```
+
+##### Create features plots
+
+```{r}
+methods <- names(datal)
+plotsFeatures <- lapply(methods, function(m){
+  reduction = "umap"
+  return(plotFeatures(object = datal[[m]], features = c("Pseudo_batch_1", "Pseudo_batch_2"), reduction = reduction))
+})
+names(plotsFeatures) <- methods
+```
+
+#### Suplementary Figures plots 
+
+```{r}
+methods <- names(plots)
+supFigurePlots <- lapply(methods, function(m){
+  p1 = plots[[m]]$seurat_clusters + ggtitle(m, subtitle = "Clusters") + mytheme + theme(legend.position = "none")
+  p2 = plotsFeatures[[m]]$Pseudo_batch_1 + ggtitle(label = "", subtitle = "Pseudo-batch 1") + mytheme + theme(legend.position = "none")
+  p3 = plotsFeatures[[m]]$Pseudo_batch_2 + ggtitle(label = "", subtitle = "Pseudo-batch 2") + mytheme + theme(legend.position = "none")
   
-  batch <- factor(dataset$batch)
-  invOrder <- which(batch == levels(batch)[2])
-  invOrder <- c(invOrder, which(batch == levels(batch)[1]))
+  return(list(clusters = p1, pseudo1 = p2, pseudo2 = p3))
+})
+names(supFigurePlots) <- methods
+```
 
-  df <- as.data.frame(Embeddings(dataset,reduction = "umap"))
-  df$Cluster <- factor(dataset$seurat_clusters)
-  df$Batch <- batch
-  df$Inverse <- invOrder
-  
-  return(df)
-}
+### BioRxiv v2 
 
-# Uncorrected
-pa <- DimPlot(Uncorrected,
-              reduction = "umap",
-              group.by = "seurat_clusters", 
-              label = TRUE, label.size = 6) +
-  mytheme + NoLegend() + 
-  ggtitle("Uncorrected", subtitle = "Clusters") 
+```{r fig.height=16, fig.width=24}
+p0 <- patchwork::plot_spacer()
 
-data <- plotDF(Uncorrected)
+pa <- plots[["Uncorrected"]]$seurat_clusters + ggtitle("Uncorrected", subtitle = "Clusters") + mytheme + theme(aspect.ratio = 1,legend.position = "none") + Seurat::NoAxes()
 
-pb <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("gray", " purple")) + 
-  NoLegend() + 
-  ggtitle("",subtitle = "Pseudo-batch 1")
+pb <- plotsFeatures[["Uncorrected"]]$Pseudo_batch_1 + ggtitle(label = "", subtitle = "Pseudo-batch 1") + mytheme + theme(aspect.ratio = 1,legend.position = "none") + Seurat::NoAxes() 
 
-pc <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("purple", " gray")) +
-  NoLegend()+ 
-  ggtitle("",subtitle = "Pseudo-batch 2")
+pc <- plotsFeatures[["Uncorrected"]]$Pseudo_batch_2 + ggtitle(label = "", subtitle = "Pseudo-batch 2") + mytheme + theme(aspect.ratio = 1,legend.position = "none") + Seurat::NoAxes()
 
-figC <- data.frame("Silhouette" = t(scoresSilhouette), "kBet.Acceptance.Rate" = t(scoresKbet), method = colnames(scoresKbet))
+pd <- pMetrics + ggtitle("Metrics") + mytheme + theme(legend.position = "none")
 
-pd <- ggplot(figC[-1,], aes(Silhouette, kBet.Acceptance.Rate, color = method, label = method)) + 
-  geom_point(size = 7, alpha = 0.5) +
-  geom_text_repel(size = 7, alpha = 1.0, direction = "both", nudge_y = 0 ) +
-  geom_hline(yintercept = figC$kBet.Acceptance.Rate[1], linetype = "dashed", alpha = 0.5 ) + 
-  geom_vline(xintercept = figC$Silhouette[1], linetype = "dashed", alpha = 0.5) + 
-  NoLegend()
+pe <- plots[["Canek"]]$seurat_clusters + ggtitle(label = "Canek", subtitle = "Clusters") + mytheme + theme(legend.position = "none")
+pf <- plotsFeatures[["Canek"]]$Pseudo_batch_1 + ggtitle(label = "", subtitle = "Pseudo-batch 1") + mytheme + theme(legend.position = "none")
+pg <- plotsFeatures[["Canek"]]$Pseudo_batch_2 + ggtitle(label = "", subtitle = "Pseudo-batch 2") + mytheme + theme(legend.position = "none")
 
-# Canek
-
-data <- plotDF(Canek)
-
-p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("gray", " purple")) +
-  ggtitle("Canek", subtitle = "Pseudo-batch 1") +
-  NoLegend()
-
-p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("purple", " gray")) +
-  ggtitle("",subtitle = "Pseudo-batch 2") + 
-  NoLegend()
-
-pe <- p1 + p2
-
-# MNN
-
-data <- plotDF(MNN)
-
-p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("gray", " purple")) +
-  ggtitle("MNN", subtitle = "Pseudo-batch 1") +
-  NoLegend()
-
-p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("purple", " gray")) +
-  ggtitle("",subtitle = "Pseudo-batch 2") + 
-  NoLegend()
-
-pf <- p1 + p2
-
-# Seurat
-
-data <- plotDF(Seurat)
-
-p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("gray", " purple")) +
-  ggtitle("Seurat", subtitle = "Pseudo-batch 1") +
-  NoLegend()
-
-p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("purple", " gray")) +
-  ggtitle("",subtitle = "Pseudo-batch 2") + 
-  NoLegend()
-
-pg <- p1 + p2
-
-# scMerge
-
-data <- plotDF(scMerge)
-
-p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("gray", " purple")) +
-  ggtitle("scMerge", subtitle = "Pseudo-batch 1") +
-  NoLegend()
-
-p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("purple", " gray")) +
-  ggtitle("",subtitle = "Pseudo-batch 2") + 
-  NoLegend()
-
-ph <- p1 + p2
-
-# ComBat
-
-data <- plotDF(ComBat)
-
-p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("gray", " purple")) +
-  ggtitle("ComBat", subtitle = "Pseudo-batch 1") +
-  NoLegend()
-
-p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("purple", " gray")) +
-  ggtitle("",subtitle = "Pseudo-batch 2") + 
-  NoLegend()
-
-pi <- p1 + p2
-
-# Liger
-
-data <- plotDF(Liger)
-
-p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("gray", " purple")) +
-  ggtitle("Liger", subtitle = "Pseudo-batch 1") +
-  NoLegend()
-
-p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("purple", " gray")) +
-  ggtitle("",subtitle = "Pseudo-batch 2") + 
-  NoLegend()
-
-pj <- p1 + p2
-
-# Harmony
-
-data <- plotDF(Harmony)
-
-p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("gray", " purple")) +
-  ggtitle("Harmony", subtitle = "Pseudo-batch 1") +
-  NoLegend()
-
-p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("purple", " gray")) +
-  ggtitle("",subtitle = "Pseudo-batch 2") + 
-  NoLegend()
-
-pk <- p1 + p2
-
-# Scanorama
-
-data <- plotDF(Scanorama)
-
-p1 <- ggplot(data, aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("gray", " purple")) +
-  ggtitle("Scanorama", subtitle = "Pseudo-batch 1") +
-  NoLegend()
-
-p2 <- ggplot(data[data$Inverse,], aes(x = UMAP_1, y =  UMAP_2)) +
-  geom_point(aes(col = Batch),size = 0.1, alpha = 0.5) + 
-  scale_color_manual(values = c("purple", " gray")) +
-  ggtitle("",subtitle = "Pseudo-batch 2") + 
-  NoLegend()
-
-pl <- p1 + p2
+ph <- plots[["MNN"]]$seurat_clusters + ggtitle(label = "MNN", subtitle = "Clusters") + mytheme + theme(legend.position = "none")
+pi <- plotsFeatures[["MNN"]]$Pseudo_batch_1 + ggtitle(label = "", subtitle = "Pseudo-batch 1") + mytheme + theme(legend.position = "none")
+pj <- plotsFeatures[["MNN"]]$Pseudo_batch_2 + ggtitle(label = "", subtitle = "Pseudo-batch 2") + mytheme + theme(legend.position = "none")
 
 layout <- "
-abcd
-eeff
-gghh
-iijj
-kkll
+###ab
+###ac
+efgdd
+hijdd
 "
-p <- wrap_plots(a = pa, b = pb, c = pc, d = pd,
-                e = pe, f = pf, 
-                g = pg, h = ph,
-                i = pi, j = pj,
-                k = pk, l = pl, 
-                design = layout)
+
+p <- wrap_plots(a = pa, b = pb, c = pc,
+                d = pd,
+                e = pe, f = pf, g = pg,
+                h = ph, i = pi, j = pj,
+                design = layout, widths = 1, heights = 1)
+
+p
+```
+
+
+#### Supplementary Figure 
+
+```{r fig.height=20, fig.width=24}
+
+pUnco <- supFigurePlots[["Uncorrected"]]$clusters + supFigurePlots[["Uncorrected"]]$pseudo1 + supFigurePlots[["Uncorrected"]]$pseudo2
+
+pCanek <- supFigurePlots[["Canek"]]$clusters + supFigurePlots[["Canek"]]$pseudo1 + supFigurePlots[["Canek"]]$pseudo2
+
+pMNN <- supFigurePlots[["MNN"]]$clusters + supFigurePlots[["MNN"]]$pseudo1 + supFigurePlots[["MNN"]]$pseudo2
+
+pSeurat <- supFigurePlots[["Seurat"]]$clusters + supFigurePlots[["Seurat"]]$pseudo1 + supFigurePlots[["Seurat"]]$pseudo2
+
+pComBat <- supFigurePlots[["ComBat"]]$clusters + supFigurePlots[["ComBat"]]$pseudo1 + supFigurePlots[["ComBat"]]$pseudo2
+
+pScanorama <- supFigurePlots[["Scanorama"]]$clusters + supFigurePlots[["Scanorama"]]$pseudo1 + supFigurePlots[["Scanorama"]]$pseudo2
+
+pComBatseq <- supFigurePlots[["ComBatseq"]]$clusters + supFigurePlots[["ComBatseq"]]$pseudo1 + supFigurePlots[["ComBatseq"]]$pseudo2
+
+pscMerge <- supFigurePlots[["scMerge"]]$clusters + supFigurePlots[["scMerge"]]$pseudo1 + supFigurePlots[["scMerge"]]$pseudo2
+
+pHarmony <- supFigurePlots[["Harmony"]]$clusters + supFigurePlots[["Harmony"]]$pseudo1 + supFigurePlots[["Harmony"]]$pseudo2
+
+pLiger <- supFigurePlots[["Liger"]]$clusters + supFigurePlots[["Liger"]]$pseudo1 + supFigurePlots[["Liger"]]$pseudo2
+
+layout <- "
+ab
+cd
+ef
+gh
+ij
+"
+
+p <- wrap_plots(a = pUnco,
+                b = pCanek, 
+                c = pComBat,
+                d = pComBatseq,
+                e = pHarmony,
+                f = pLiger,
+                g = pMNN,
+                h = pScanorama,
+                i = pscMerge,
+                j = pSeurat,
+                design = layout, widths = 1, heights = 1)
+
+p
+```
+
+### Ovals 
+
+```{r fig.width=10, fig.height=8}
+p1 <- PlotOvals(p = p, scores = scores, centers = centers, alpha = 0.2, level = 0.95) + 
+  geom_hline(yintercept = centers["Uncorrected", "mukBET"], linetype = "dashed", alpha = 0.5 ) +
+  geom_vline(xintercept = centers["Uncorrected", "muSilhouette"], linetype = "dashed", alpha = 0.5) +
+  mytheme + theme(aspect.ratio = 1)
+p2 <- p1 + xlim(c(0.2, 0.27)) + ylim(0.8,1.1) 
+
+p <- (p1 / p2) + plot_layout(guides = "collect")
+
 p
 ```
