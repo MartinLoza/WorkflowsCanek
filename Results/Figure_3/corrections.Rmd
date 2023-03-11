@@ -9,7 +9,6 @@ This is the main workflow to reproduce the pseudo-batches test from Figure 3.
 library(here)
 library(Canek)
 library(Seurat)
-library(RNAseqAnalysis)
 options(future.globals.maxSize = 4e10)
 
 dimPCA <- 10 # Number of PCA dimensions used in the analysis.
@@ -45,7 +44,7 @@ x
 
 ```{r}
 set.seed(seed)
-x <- RNAseqAnalysis::SampleData(x, frac = 0.1, seed = seed)
+x <- SampleData(x, frac = 0.1, seed = seed)
 x
 ```
 
@@ -53,7 +52,7 @@ x
 
 ```{r}
 set.seed(seed)
-x <- RNAseqAnalysis::SeuratPreprocessing(x)
+x <- SeuratPreprocessing(x)
 ```
 
 ## Loop

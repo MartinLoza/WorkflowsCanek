@@ -9,7 +9,6 @@
 library(here)
 library(Canek)
 library(Seurat)
-library(RNAseqAnalysis)
 options(future.globals.maxSize = 4e10)
 
 dimPCA <- 10 # Number of PCA dimensions used in the analysis.
@@ -43,12 +42,12 @@ xl
 
 ## Data preprocessing
 set.seed(seed)
-xl <- lapply(xl, RNAseqAnalysis::SeuratPreprocessing)
+xl <- lapply(xl, SeuratPreprocessing)
 set.seed(seed)
-GS <- RNAseqAnalysis::SeuratPreprocessing(GS)
+GS <- SeuratPreprocessing(GS)
 
 ## Gold standard PCA and UMAP
-GS <- RNAseqAnalysis::GetUMAP(GS, dims = dimPCA)
+GS <- GetUMAP(GS, dims = dimPCA)
 
 ## Corrections
 ks <- c(3,2,2) # Ks for scMerge

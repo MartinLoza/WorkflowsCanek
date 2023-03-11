@@ -8,8 +8,8 @@ This is the main workflow to reproduce the simulated data correction shown in Fi
 ```{r setup}
 library(here)
 library(Canek)
+library(batchelor)
 library(Seurat)
-library(RNAseqAnalysis)
 options(future.globals.maxSize = 4e10)
 
 dimPCA <- 10 # Number of PCA dimensions used in the analysis.
@@ -36,7 +36,7 @@ GS
 
 ```{r}
 set.seed(seed)
-idxSample <- sample(x = ncol(GS), size = floor(0.2*ncol(GS)), replace = FALSE)
+idxSample <- sample(x = ncol(GS), size = floor(0.4*ncol(GS)), replace = FALSE)
 
 GS <- GS[,idxSample]
 
@@ -52,15 +52,15 @@ xl
 
 ```{r}
 set.seed(seed)
-xl <- lapply(xl, RNAseqAnalysis::SeuratPreprocessing)
+xl <- lapply(xl, SeuratPreprocessing)
 set.seed(seed)
-GS <- RNAseqAnalysis::SeuratPreprocessing(GS)
+GS <- SeuratPreprocessing(GS)
 ```
 
 ## Gold standard PCA and UMAP
 
 ```{r}
-GS <- RNAseqAnalysis::GetUMAP(GS, dims = dimPCA)
+GS <- GetUMAP(GS, dims = dimPCA)
 ```
 
 ## Corrections
@@ -83,7 +83,7 @@ datal <- list(GS = GS,
               ComBat = ComBat, 
               Liger = Liger, 
               Harmony = Harmony, 
-              Scanorama = Scanorama, 
+              Scanorama = Scanorama,
               ComBatseq = ComBatseq)
 ```
 

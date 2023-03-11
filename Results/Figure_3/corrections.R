@@ -9,7 +9,6 @@
 library(here)
 library(Canek)
 library(Seurat)
-library(RNAseqAnalysis)
 options(future.globals.maxSize = 4e10)
 
 dimPCA <- 10 # Number of PCA dimensions used in the analysis.
@@ -36,12 +35,12 @@ x
 
 ## Sampling data. For tests
 set.seed(seed)
-x <- RNAseqAnalysis::SampleData(x, frac = 0.1, seed = seed)
+x <- SampleData(x, frac = 0.1, seed = seed)
 x
 
 ## Data preprocessing
 set.seed(seed)
-x <- RNAseqAnalysis::SeuratPreprocessing(x)
+x <- SeuratPreprocessing(x)
 
 for(i in seq_len(rep)){
   

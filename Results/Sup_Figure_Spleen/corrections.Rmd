@@ -9,7 +9,6 @@ This is the main workflow to reproduce the spleend data correction supplementary
 library(here)
 library(Canek)
 library(Seurat)
-library(RNAseqAnalysis)
 options(future.globals.maxSize = 4e10)
 
 dimPCA <- 10 # Number of PCA dimensions used in the analysis.
@@ -34,7 +33,7 @@ xl
 
 ```{r}
 set.seed(seed)
-xl <- lapply(xl, RNAseqAnalysis::SampleData, frac = 0.1, seed = seed)
+xl <- lapply(xl, SampleData, frac = 0.1, seed = seed)
 xl
 ```
 
@@ -42,7 +41,7 @@ xl
 
 ```{r}
 set.seed(seed)
-xl <- lapply(xl, RNAseqAnalysis::SeuratPreprocessing)
+xl <- lapply(xl, SeuratPreprocessing)
 ```
 
 ## Corrections

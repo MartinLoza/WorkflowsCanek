@@ -6,12 +6,18 @@
 # This is the script used to correct batch-effects using different methods.
 # To reproduce the Figures of each test, check the appropiate notebook file.
 
+## Load packages
+library(Canek)
+library(batchelor)
+library(Seurat)
+library(sva)
+
 ## Seurat integration
 set.seed(seed)
 Anchors <- Seurat::FindIntegrationAnchors(object.list = xl, verbose = FALSE)
 Seurat <- Seurat::IntegrateData(anchorset = Anchors, verbose = FALSE)
 set.seed(seed)
-Seurat <- RNAseqAnalysis::GetUMAP(object = Seurat, dims = dimPCA, assay = "integrated")
+Seurat <- GetUMAP(object = Seurat, dims = dimPCA, assay = "integrated")
 
 ## Set up the Uncorrected data
 set.seed(seed)
@@ -20,57 +26,57 @@ Uncorrected <- Reduce(merge, xl)
 Uncorrected <- Uncorrected[features,]
 Seurat::VariableFeatures(Uncorrected) <- features
 set.seed(seed)
-Uncorrected <- RNAseqAnalysis::GetUMAP(object = Uncorrected, dims = dimPCA, assay = "RNA") 
+Uncorrected <- GetUMAP(object = Uncorrected, dims = dimPCA, assay = "RNA") 
  
 ## Canek 
 set.seed(seed)
 Canek <- RunCanek(Uncorrected, batches = "batch")
 set.seed(seed)
-Canek <- RNAseqAnalysis::GetUMAP(object = Canek, dims = dimPCA, assay = "Canek")
+Canek <- GetUMAP(object = Canek, dims = dimPCA, assay = "Canek")
 
 ## MNN 
 set.seed(seed)
-MNN <- RNAseqAnalysis::RunMNN(object = Uncorrected, batch = "batch")
+MNN <- RunMNN(object = Uncorrected, batch = "batch")
 set.seed(seed)
-MNN <- RNAseqAnalysis::GetUMAP(object = MNN, dims = dimPCA, assay = "integrated")
+MNN <- GetUMAP(object = MNN, dims = dimPCA, assay = "integrated")
 
 ## ComBat
 set.seed(seed)
-ComBat <- RNAseqAnalysis::RunComBat(object = Uncorrected, batch = "batch")
+ComBat <- RunComBat(object = Uncorrected, batch = "batch")
 set.seed(seed)
-ComBat <- RNAseqAnalysis::GetUMAP(object = ComBat, dims = dimPCA, assay = "integrated")
+ComBat <- GetUMAP(object = ComBat, dims = dimPCA, assay = "integrated")
 
 ## scMerge
 set.seed(seed)
-scMerge <- RNAseqAnalysis::RunScMerge(object = Uncorrected, batch = "batch", ks = ks)
+scMerge <- RunScMerge(object = Uncorrected, batch = "batch", ks = ks)
 set.seed(seed)
-scMerge <- RNAseqAnalysis::GetUMAP(object = scMerge, dims = dimPCA, assay = "integrated")
+scMerge <- GetUMAP(object = scMerge, dims = dimPCA, assay = "integrated")
  
 ## ComBat-seq
 set.seed(seed)
-ComBatseq <- RNAseqAnalysis::RunComBatseq(object = Uncorrected, batch = "batch")
+ComBatseq <- RunComBatseq(object = Uncorrected, batch = "batch")
 set.seed(seed)
-ComBatseq <- RNAseqAnalysis::GetUMAP(object = ComBatseq, dims = dimPCA, assay = "integrated")
+ComBatseq <- GetUMAP(object = ComBatseq, dims = dimPCA, assay = "integrated")
 
 ## Liger
 reduction <- "Liger"
 set.seed(seed)
-Liger <- RNAseqAnalysis::RunLiger(object = Uncorrected, batch = "batch")
+Liger <- RunLiger(object = Uncorrected, batch = "batch")
 dims <- ncol(Liger[[reduction]])
 set.seed(seed)
-Liger <- RNAseqAnalysis::GetUMAP(object = Liger, dims = dims, reduction = reduction, PCA = FALSE, scale = FALSE)
+Liger <- GetUMAP(object = Liger, dims = dims, reduction = reduction, PCA = FALSE, scale = FALSE)
 
 ## Scanorama
 set.seed(seed)
-Scanorama <- RNAseqAnalysis::RunScanorama(object = Uncorrected, batch = "batch")
+Scanorama <- RunScanorama(object = Uncorrected, batch = "batch")
 set.seed(seed)
-Scanorama <- RNAseqAnalysis::GetUMAP(object = Scanorama, dims = dimPCA, assay = "integrated")
+Scanorama <- GetUMAP(object = Scanorama, dims = dimPCA, assay = "integrated")
  
 ## Harmony
 set.seed(seed)
 reduction <- "harmony"
-Harmony <- RNAseqAnalysis::RunHarmony(object = Uncorrected, batch = "batch", dims = dimPCA)
+Harmony <- RunHarmony(object = Uncorrected, batch = "batch", dims = dimPCA)
 dims <- ncol(Harmony[[reduction]])
 set.seed(seed)
-Harmony <- RNAseqAnalysis::GetUMAP(object = Harmony, dims = dims, reduction = reduction, PCA = FALSE, scale = FALSE)
+Harmony <- GetUMAP(object = Harmony, dims = dims, reduction = reduction, PCA = FALSE, scale = FALSE)
  

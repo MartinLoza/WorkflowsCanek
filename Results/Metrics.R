@@ -21,7 +21,7 @@ for(method in names(datal)){
   }
   
   set.seed(seed)
-  scoresKbet[method] <- RNAseqAnalysis::RunKBET(object = datal[[method]], batch = batchKBET, reduction = reduction, dims = dims, per = per, acceptance = TRUE)
+  scoresKbet[method] <- RunKBET(object = datal[[method]], batch = batchKBET, reduction = reduction, dims = dims, per = per, acceptance = TRUE)
 }
 
 ## Silhouette
@@ -38,5 +38,5 @@ for(method in names(datal)){
   }
   
   set.seed(seed)
-  scoresSilhouette[method] <- RNAseqAnalysis::RunSilhouette(object = datal[[method]], batch = batchSilhouette, reduction = reduction, dims = dims)
+  scoresSilhouette[method] <- RunSilhouette(object = datal[[method]], batch = batchSilhouette, reduction = reduction, dims = dims)
 }
