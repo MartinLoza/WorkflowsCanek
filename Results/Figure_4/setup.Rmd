@@ -21,7 +21,10 @@ de.prob_C1_C2 = c(0.0,0.01) # Celltype differential expression probabilities.
 method_C3_C4_C5 = "groups" # Simulations method.
 group.prob_C3_C4_C5 = c(0.4,0.3,0.3) # Celltype appearance probabilities.
 de.prob_C3_C4_C5 = c(0.2,0.25,0.35) # Celltype differential expression probabilities.
-dataFile <- here("Data/Results/Simulations")
+dataFile <- here("Data/Simulations")
+
+##Global Functions
+source(here("Functions.R"))
 ```
 
 ## Simulate data with Splatter

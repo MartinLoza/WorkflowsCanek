@@ -14,8 +14,8 @@ library(ggrepel)
 options(future.globals.maxSize = 4e10)
 source(here("Functions.R"))
 
-resultsFile <- here("Data/Results/Figure2")
-plotsFile <- here("Figures/Figure2")
+resultsFile <- here("Data/Figure2")
+plotsFile <- here("Figure2")
 mytheme <- theme_classic() + theme(text = element_text(size = 20), legend.text=element_text(size=16))
 theme_set(mytheme)
 ```
@@ -141,7 +141,7 @@ p
 ## Supplementary Figure (celltype & batch)
 
 
-```{r fig.height=20, fig.width=19}
+```{r fig.height=20, fig.width=8}
 #plots <- plotsOriginal # Change this to obtain the original coordinates plot
 plots <- plotsUmap
 

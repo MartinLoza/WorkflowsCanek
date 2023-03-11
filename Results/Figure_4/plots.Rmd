@@ -13,11 +13,15 @@ library(ggplot2)
 library(ggrepel)
 options(future.globals.maxSize = 4e10)
 
-resultsFile <- here("Data/Results/Figure4")
+resultsFile <- here("Data/Figure4")
 mytheme <- theme_classic() + theme(text = element_text(size = 20)) 
 theme_set(mytheme)
 
 ## Functions
+
+##Global Functions
+source(here("Functions.R"))
+
 ## Plot for BioRxiv v1
 plotCorrection <- function(object = NULL, title = "correction", reduction1 = "pca", reduction2 = "umap"){
   
@@ -45,7 +49,7 @@ scoresSilhouette <- scores$scoresSilhouette
 
 # BioRxiv v1 Fig 4. 
 
-```{r fig.height=55, fig.width=20}
+```{r fig.width=8, fig.height=20}
 plots <- lapply(names(datal), function(n){
   if(n == "GS")
     title = "Gold Standard"
@@ -89,7 +93,7 @@ p <- wrap_plots(a = plots[[1]]$p1, b = plots[[1]]$p2,
                 q = plots[[9]]$p1, r = plots[[9]]$p2,
                 s = plots[[10]]$p1, t = plots[[10]]$p2,
                 u = plots[[11]]$p1, v = plots[[11]]$p2,
-                design = layout)
+                design = layout) & coord_fixed()
 p
 ```
 

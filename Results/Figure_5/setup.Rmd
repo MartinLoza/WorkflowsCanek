@@ -9,7 +9,10 @@ library(Seurat)
 library(SeuratData)
 options(future.globals.maxSize = 4e10)
 
-dataFile <- here("Data/Results/Pancreas") # Input and output data folder.
+dataFile <- here("Data/Pancreas") # Input and output data folder.
+
+##Global Functions
+source(here("Functions.R"))
 ```
 
 # Pancreatics datasets

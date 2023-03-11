@@ -16,8 +16,8 @@ library(ggforce)
 options(future.globals.maxSize = 4e10)
 source(here("Functions.R"))
 
-resultsFile <- here("Data/Results/Figure3")
-plotsFile <- here("Figures/Figure3")
+resultsFile <- here("Data/Figure3")
+plotsFile <- here("/Figure3")
 mytheme <- theme_classic() + theme(text = element_text(size = 20), legend.text=element_text(size=16))
 theme_set(mytheme)
 ```

@@ -13,7 +13,10 @@ options(future.globals.maxSize = 4e10)
 
 seed = 777
 
-dataFile <- here("Data/Results/Jurkat_293t") 
+dataFile <- here("Data/Jurkat_293t") 
+
+##Global Functions
+source(here("Functions.R"))
 ```
 
 ##  Load data
@@ -38,7 +41,7 @@ t293[["celltype"]] <- "293t"
 ## Pre-processing
 
 ```{r}
-Mix50_50 <- RNAseqAnalysis::SeuratPreprocessing(object = Mix50_50)
+Mix50_50 <- SeuratPreprocessing(object = Mix50_50)
 ```
 
 ## PCA

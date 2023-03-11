@@ -18,8 +18,11 @@ seed <- 777 # Luck seed.
 batchKBET <- "batch" # Label used in kBET.
 batchSilhouette <- "celltype" # Label used in Silhouette.
 
-dataFile <- here("Data/Results/Pancreas/Raw.Rds") # Input data file's path.
-resultsFile <- here("Data/Results/Figure5") # Output data file's path.
+dataFile <- here("Data/Pancreas/Raw.Rds") # Input data file's path.
+resultsFile <- here("Data/Figure5") # Output data file's path.
+
+##Global Functions
+source(here("Functions.R"))
 ```
 
 # Load data

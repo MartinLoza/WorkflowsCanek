@@ -18,8 +18,8 @@ seed <- 777 # Luck seed.
 batchKBET <- "batch" # Label used in kBET.
 batchSilhouette <- "celltype" # Label used in Silhouette.
 
-dataFile <- here("Data/Results/Spleen_TM/Raw.Rds") # Input data file's path.
-resultsFile <- here("Data/Results/Sup_Figure_Spleen") # Output data file's path.
+dataFile <- here("Data/Spleen_TM/Raw.Rds") # Input data file's path.
+resultsFile <- here("Data/Sup_Figure_Spleen") # Output data file's path.
 
 ## Load data
 xl <- readRDS(dataFile)

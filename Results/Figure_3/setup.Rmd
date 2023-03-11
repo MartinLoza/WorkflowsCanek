@@ -9,7 +9,7 @@ library(Seurat)
 options(future.globals.maxSize = 4e10)
 
 seed = 777 
-dataFile <- here("Data/Results/Spleen_TM") 
+dataFile <- here("Data/Spleen_TM") 
 ```
 
 ## Load Droplet and Facs spleen datasets

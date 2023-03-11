@@ -13,11 +13,15 @@ library(ggplot2)
 library(ggrepel)
 options(future.globals.maxSize = 4e10)
 
-resultsFile <- here("Data/Results/Sup_Figure_IfnB")
+resultsFile <- here("Data/Sup_Figure_IfnB")
 mytheme <- theme_classic() + theme(text = element_text(size = 20)) 
 theme_set(mytheme)
 
 ## Functions
+
+##Global Functions
+source(here("Functions.R"))
+
 ## Plot corrections 
 plotCorrection <- function(object = NULL, title = "correction", reduction1 = "pca", reduction2 = "umap"){
   

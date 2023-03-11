@@ -25,6 +25,9 @@ batchSilhouette <- "seurat_clusters" # Label used in Silhouette.
 dataFile <- here("Data/Results/Spleen_TM/Raw.Rds") # Input data file's path.
 resultsFile <- here("Data/Results/Figure3") # Output data file's path.
 
+##Global Functions
+source(here("Functions.R"))
+
 ## Load data
 xl <- readRDS(dataFile)
 xl
